@@ -1,0 +1,9 @@
+main/download
+downloads
+*.DS_Store
+*.session
+__pycache__
+private.md
+*.session*
+.vscode
+.vs
