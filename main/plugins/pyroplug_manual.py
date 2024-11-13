@@ -1,7 +1,6 @@
-# main/plugins/pyroplug_manual.py
-# Github.com-Vasusen-code
-
-import asyncio, time, os
+import asyncio
+import time
+import os
 
 from .. import userbot  # 引入已经初始化的 userbot
 
@@ -22,13 +21,10 @@ async def get_numeric_chat_id(client, chat_identifier):
         return None
 
 async def get_msg(msg_link, i=0):
-    """手动下载模式下的 get_msg 函数"""
     chat = ""
-    round_message = False
     if "?single" in msg_link:
         msg_link = msg_link.split("?single")[0]
     msg_id = int(msg_link.split("/")[-1]) + int(i)
-    height, width, duration, thumb_path = 90, 90, 0, None
 
     if 't.me/' in msg_link:
         parts = msg_link.split('/')
@@ -44,34 +40,42 @@ async def get_msg(msg_link, i=0):
 
         try:
             msg = await userbot.get_messages(chat, msg_id)
-            if msg.media:
-                if msg.media == MessageMediaType.WEB_PAGE:
-                    print("克隆网页内容：")
-                    print(msg.text)
-                    return
-            if not msg.media:
-                if msg.text:
-                    print("克隆文本消息：")
-                    print(msg.text)
-                    return
+            if msg.media_group_id:
+                # 获取同一媒体组的所有消息
+                media_group = await userbot.get_media_group(chat, msg_id)
+                print(f"发现媒体组，共有 {len(media_group)} 条消息。")
 
-            print("尝试下载媒体文件...")
-            file = await userbot.download_media(msg)
-            print(f"文件已下载：{file}")
-
-            caption = msg.caption if msg.caption else ""
-
-            if msg.media == MessageMediaType.PHOTO:
-                print("已下载照片。")
-                # 在此处添加处理照片的代码，例如保存到特定目录
-            elif msg.media == MessageMediaType.VIDEO:
-                print("已下载视频。")
-                # 在此处添加处理视频的代码
+                for media_msg in media_group:
+                    # 下载每条消息的媒体
+                    await download_media_message(media_msg)
             else:
-                print("已下载文件。")
-                # 在此处添加处理其他文件的代码
+                # 单条消息处理
+                await download_media_message(msg)
 
         except Exception as e:
             print(f"下载消息时出错：{e}")
     else:
         print("请输入有效的 t.me 链接。")
+
+async def download_media_message(msg):
+    if msg.media:
+        print(f"尝试下载媒体文件，消息 ID：{msg.id}")
+        file = await userbot.download_media(msg)
+        print(f"文件已下载：{file}")
+
+        caption = msg.caption if msg.caption else ""
+        print(caption)
+
+        if msg.media == MessageMediaType.PHOTO:
+            print("已下载照片。")
+            # 在此处添加处理照片的代码
+        elif msg.media == MessageMediaType.VIDEO:
+            print("已下载视频。")
+            # 在此处添加处理视频的代码
+        else:
+            print("已下载文件。")
+            # 在此处添加处理其他文件的代码
+    else:
+        if msg.text:
+            print("文本消息：")
+            print(msg.text)
