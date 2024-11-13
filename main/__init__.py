@@ -1,7 +1,7 @@
-#Github.com/Vasusen-code
+# __init__.py
+# Github.com/Vasusen-code
 
 from pyrogram import Client
-
 from telethon.sessions import StringSession
 from telethon.sync import TelegramClient
 
@@ -11,6 +11,9 @@ import logging, time, sys
 logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
                     level=logging.WARNING)
 
+# 定义是否使用机器人模式的变量
+IS_BOT_MODE = False  # 设置为 False 切换到手动下载模式
+
 # variables
 API_ID = config("API_ID", default=None, cast=int)
 API_HASH = config("API_HASH", default=None)
@@ -19,25 +22,32 @@ SESSION = config("SESSION", default=None)
 FORCESUB = config("FORCESUB", default=None)
 AUTH = config("AUTH", default=None, cast=int)
 
-bot = TelegramClient('bot', API_ID, API_HASH).start(bot_token=BOT_TOKEN) 
+# 始终定义 bot 变量
+bot = None
 
-userbot = Client("saverestricted", session_string=SESSION, api_hash=API_HASH, api_id=API_ID) 
+if IS_BOT_MODE:
+    bot = TelegramClient('bot', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
-try:
-    userbot.start()
-except BaseException:
-    print("Userbot Error ! Have you added SESSION while deploying??")
-    sys.exit(1)
+    userbot = Client("saverestricted", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
 
-Bot = Client(
-    "SaveRestricted",
-    bot_token=BOT_TOKEN,
-    api_id=int(API_ID),
-    api_hash=API_HASH
-)    
+    try:
+        userbot.start()
+    except BaseException:
+        print("Userbot Error ! Have you added SESSION while deploying??")
+        sys.exit(1)
 
-try:
-    Bot.start()
-except Exception as e:
-    print(e)
-    sys.exit(1)
+    Bot = Client(
+        "SaveRestricted",
+        bot_token=BOT_TOKEN,
+        api_id=int(API_ID),
+        api_hash=API_HASH
+    )
+
+    try:
+        Bot.start()
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+else:
+    # 手动下载模式，仅初始化 userbot，不在此处启动
+    userbot = Client("saverestricted", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
